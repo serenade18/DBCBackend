@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ vcard.display_name }}{% if vcard.company_name %} · {{ vcard.company_name }}{% endif %}</title>
+<meta name="description" content="{{ vcard.bio|default:vcard.job_title|truncatechars:160 }}">
+
+<meta property="og:type" content="profile">
+<meta property="og:title" content="{{ vcard.display_name }}">
+<meta property="og:description" content="{{ vcard.bio|default:vcard.job_title|truncatechars:160 }}">
+{% if vcard.profile_photo %}<meta property="og:image" content="{{ vcard.profile_photo.url }}">{% endif %}
+<meta property="og:url" content="{{ vcard.public_url }}">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ vcard.display_name }}">
+<meta name="twitter:description" content="{{ vcard.bio|default:vcard.job_title|truncatechars:160 }}">
+{% if vcard.profile_photo %}<meta name="twitter:image" content="{{ vcard.profile_photo.url }}">{% endif %}
+
+<link rel="canonical" href="{{ vcard.public_url }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "{% if vcard.company_name %}Organization{% else %}Person{% endif %}",
+  "name": "{{ vcard.display_name|escapejs }}",
+  "jobTitle": "{{ vcard.job_title|escapejs }}",
+  "url": "{{ vcard.public_url|escapejs }}"{% if vcard.email %},
+  "email": "{{ vcard.email|escapejs }}"{% endif %}{% if vcard.phone %},
+  "telephone": "{{ vcard.phone|escapejs }}"{% endif %}
+}
+</script>
+
+<style>
+  :root {
+    --primary: {{ vcard.theme_config.primaryColor|default:"#111827" }};
+    --secondary: {{ vcard.theme_config.secondaryColor|default:"#6B7280" }};
+    --bg: {{ vcard.theme_config.backgroundColor|default:"#FFFFFF" }};
+    --text: {{ vcard.theme_config.textColor|default:"#111827" }};
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: {{ vcard.theme_config.fontFamily|default:"Inter" }}, system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 64px; }
+  .cover { width: 100%; aspect-ratio: 3/1; object-fit: cover; border-radius: var(--radius); background: var(--secondary); }
+  .profile-header { text-align: center; margin-top: -48px; }
+  .avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg); background: var(--secondary); }
+  h1 { font-size: 1.5rem; margin: 12px 0 0; }
+  .job { color: var(--secondary); margin: 4px 0 0; }
+  .bio { margin-top: 16px; text-align: center; }
+  section { margin-top: 32px; }
+  h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; color: var(--secondary); }
+  .links { display: grid; gap: 10px; margin-top: 12px; }
+  .link-btn {
+    display: block; padding: 14px 16px; text-align: center; text-decoration: none;
+    color: var(--text); background: color-mix(in srgb, var(--primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+    border-radius: {% if vcard.theme_config.buttonStyle == "pill" %}999px{% else %}10px{% endif %};
+    font-weight: 600;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .card-item { border: 1px solid color-mix(in srgb, var(--secondary) 30%, transparent); border-radius: 12px; padding: 12px; }
+  .card-item img { width: 100%; border-radius: 8px; aspect-ratio: 1; object-fit: cover; }
+  .actions { display: flex; gap: 10px; margin-top: 24px; }
+  .actions a { flex: 1; text-align: center; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: 700; }
+  .actions .save { background: var(--primary); color: var(--bg); }
+  .actions .qr { border: 1px solid var(--primary); color: var(--primary); }
+  .testimonial { border-left: 3px solid var(--primary); padding-left: 12px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<main>
+  {% if vcard.cover_photo %}<img class="cover" src="{{ vcard.cover_photo.url }}" alt="" loading="eager">{% endif %}
+
+  <header class="profile-header">
+    {% if vcard.profile_photo %}
+      <img class="avatar" src="{{ vcard.profile_photo.url }}" alt="{{ vcard.display_name }}">
+    {% endif %}
+    <h1>{{ vcard.display_name }}</h1>
+    {% if vcard.job_title or vcard.company_name %}
+      <p class="job">{{ vcard.job_title }}{% if vcard.job_title and vcard.company_name %} · {% endif %}{{ vcard.company_name }}</p>
+    {% endif %}
+    {% if vcard.bio %}<p class="bio">{{ vcard.bio }}</p>{% endif %}
+  </header>
+
+  <div class="actions">
+    <a class="save" href="{% url 'public-vcard-contact' vcard.slug %}">Save contact</a>
+    <a class="qr" href="{% url 'public-vcard-qr' vcard.slug 'png' %}">QR code</a>
+  </div>
+
+  {% if links %}
+  <section aria-label="Links">
+    <h2>Links</h2>
+    <nav class="links">
+      {% for link in links %}<a class="link-btn" href="{{ link.url }}" rel="noopener" target="_blank">{{ link.title }}</a>{% endfor %}
+    </nav>
+  </section>
+  {% endif %}
+
+  {% if services %}
+  <section aria-label="Services">
+    <h2>Services</h2>
+    <div class="grid">
+      {% for service in services %}
+      <div class="card-item">
+        {% if service.image %}<img src="{{ service.image.url }}" alt="">{% endif %}
+        <strong>{{ service.name }}</strong>
+        {% if service.price %}<div>{{ service.price }} {{ service.currency }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if products %}
+  <section aria-label="Products">
+    <h2>Products</h2>
+    <div class="grid">
+      {% for product in products %}
+      <a class="card-item" href="{{ product.external_url|default:'#' }}" style="text-decoration:none;color:inherit;">
+        {% if product.image %}<img src="{{ product.image.url }}" alt="">{% endif %}
+        <strong>{{ product.name }}</strong>
+        {% if product.price %}<div>{{ product.price }} {{ product.currency }}</div>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if gallery_items %}
+  <section aria-label="Gallery">
+    <h2>Gallery</h2>
+    <div class="grid">
+      {% for item in gallery_items %}
+      <div class="card-item"><img src="{{ item.image.url }}" alt="{{ item.title }}"></div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if testimonials %}
+  <section aria-label="Testimonials">
+    <h2>Testimonials</h2>
+    {% for testimonial in testimonials %}
+    <blockquote class="testimonial">
+      <p>&ldquo;{{ testimonial.content }}&rdquo;</p>
+      <cite>{{ testimonial.customer_name }}{% if testimonial.customer_title %}, {{ testimonial.customer_title }}{% endif %}</cite>
+    </blockquote>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if vcard.email or vcard.phone or vcard.address %}
+  <section aria-label="Contact">
+    <h2>Contact</h2>
+    {% if vcard.email %}<p><a href="mailto:{{ vcard.email }}">{{ vcard.email }}</a></p>{% endif %}
+    {% if vcard.phone %}<p><a href="tel:{{ vcard.phone }}">{{ vcard.phone }}</a></p>{% endif %}
+    {% if vcard.whatsapp %}<p><a href="https://wa.me/{{ vcard.whatsapp }}" rel="noopener" target="_blank">WhatsApp</a></p>{% endif %}
+    {% if vcard.address %}<p>{{ vcard.address }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  <section aria-label="Enquiry">
+    <h2>Get in touch</h2>
+    <form method="post" action="{% url 'enquiry-submit' vcard.slug %}" novalidate>
+      {% csrf_token %}
+      <div class="links">
+        <input name="name" placeholder="Name" required style="padding:12px;border-radius:10px;border:1px solid var(--secondary);">
+        <input name="email" type="email" placeholder="Email" required style="padding:12px;border-radius:10px;border:1px solid var(--secondary);">
+        <textarea name="message" placeholder="Message" rows="3" required style="padding:12px;border-radius:10px;border:1px solid var(--secondary);"></textarea>
+        <button class="link-btn" type="submit" style="cursor:pointer;background:var(--primary);color:var(--bg);border:none;">Send</button>
+      </div>
+    </form>
+  </section>
+</main>
+</body>
+</html>

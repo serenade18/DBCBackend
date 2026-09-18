@@ -1,0 +1,32 @@
+import logging
+
+from django.conf import settings
+from django.core.mail import send_mail
+
+logger = logging.getLogger("django")
+
+
+def send_email(*, to: str, subject: str, body: str, html_body: str | None = None) -> bool:
+    """Thin wrapper around Django's email backend. Swap EMAIL_BACKEND / add a
+    provider-specific backend (SES, Postmark, ...) without touching callers."""
+    try:
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[to],
+            html_message=html_body,
+            fail_silently=False,
+        )
+        return True
+    except Exception:
+        logger.exception("Failed to send email to %s (%s)", to, subject)
+        return False
+
+
+def verification_email_url(uid: str, token: str) -> str:
+    return f"{settings.FRONTEND_URL}/verify-email?uid={uid}&token={token}"
+
+
+def password_reset_url(uid: str, token: str) -> str:
+    return f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"

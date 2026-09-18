@@ -250,6 +250,10 @@ CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localho
 CORS_ALLOW_CREDENTIALS = True
 
 PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8000")
+# Where the React dashboard SPA is hosted — used for links inside transactional
+# emails (verify email, reset password, team invite) that must open the app,
+# not this Django backend.
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 
 # ---------------------------------------------------------------------------
 # Email / SMS

@@ -208,9 +208,13 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ),
     "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
         "rest_framework.throttling.ScopedRateThrottle",
     ),
     "DEFAULT_THROTTLE_RATES": {
+        "anon": "300/min",
+        "user": "1000/min",
         "auth": "20/min",
         "public-card": "120/min",
         "enquiry-submit": "10/min",

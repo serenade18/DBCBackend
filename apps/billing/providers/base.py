@@ -32,6 +32,11 @@ class PaymentProvider(ABC):
         ...
 
     @abstractmethod
+    def create_charge(self, *, amount, currency, reference: str, description: str, phone: str = "", customer_id: str = "") -> CheckoutResult:
+        """One-off charge — used for physical NFC card orders (§32), separate
+        from the recurring create_subscription flow."""
+
+    @abstractmethod
     def verify_payment(self, payload: dict) -> bool:
         """Verifies a payment payload/signature came from this provider."""
 

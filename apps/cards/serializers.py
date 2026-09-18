@@ -17,7 +17,7 @@ class VCardListSerializer(serializers.ModelSerializer):
         model = VCard
         fields = [
             "id", "slug", "display_name", "job_title", "company_name", "profile_photo",
-            "status", "visibility", "is_featured", "organization", "created_at", "updated_at",
+            "status", "visibility", "is_featured", "is_verified", "organization", "created_at", "updated_at",
         ]
         read_only_fields = fields
 
@@ -30,13 +30,13 @@ class VCardSerializer(serializers.ModelSerializer):
         fields = [
             "id", "organization", "owner", "assigned_user", "slug", "display_name", "job_title",
             "company_name", "bio", "profile_photo", "cover_photo", "email", "phone", "whatsapp",
-            "website", "address", "location", "template", "theme_config", "visibility", "status",
-            "is_featured", "is_directory_visible", "public_url", "published_at",
+            "website", "address", "location", "industry", "template", "theme_config", "visibility",
+            "status", "is_featured", "is_verified", "is_directory_visible", "public_url", "published_at",
             "created_at", "updated_at",
         ]
         read_only_fields = [
             "id", "organization", "owner", "assigned_user", "slug", "status",
-            "is_featured", "public_url", "published_at", "created_at", "updated_at",
+            "is_featured", "is_verified", "public_url", "published_at", "created_at", "updated_at",
         ]
 
 
@@ -46,7 +46,7 @@ class VCardCreateSerializer(serializers.ModelSerializer):
         fields = [
             "id", "organization", "display_name", "job_title", "company_name", "bio",
             "profile_photo", "cover_photo", "email", "phone", "whatsapp", "website",
-            "address", "location", "template", "theme_config", "visibility",
+            "address", "location", "industry", "template", "theme_config", "visibility",
         ]
         read_only_fields = ["id"]
 

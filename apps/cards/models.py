@@ -51,6 +51,7 @@ class VCard(BaseModel):
     website = models.URLField(blank=True)
     address = models.CharField(max_length=500, blank=True)
     location = models.CharField(max_length=255, blank=True)
+    industry = models.CharField(max_length=255, blank=True)
 
     template = models.ForeignKey(
         "templates.CardTemplate", on_delete=models.SET_NULL, related_name="vcards", null=True, blank=True
@@ -61,6 +62,7 @@ class VCard(BaseModel):
     status = models.CharField(max_length=20, choices=VCardStatus.choices, default=VCardStatus.DRAFT)
     is_featured = models.BooleanField(default=False)
     is_directory_visible = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
 
     published_at = models.DateTimeField(null=True, blank=True)
 

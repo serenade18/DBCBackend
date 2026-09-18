@@ -58,6 +58,6 @@ class PublicEnquirySubmitView(APIView):
 
         notify_new_enquiry.delay(str(enquiry.id))
 
-        if request.accepted_renderer.format == "json" and request.content_type == "application/json":
+        if request.content_type == "application/json":
             return Response(EnquirySerializer(enquiry).data, status=status.HTTP_201_CREATED)
-        return redirect(f"/@{vcard.slug}?sent=1")
+        return redirect(f"/@{vcard.slug}/?sent=1")

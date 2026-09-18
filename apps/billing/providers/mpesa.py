@@ -47,8 +47,21 @@ class MpesaProvider(PaymentProvider):
     def create_subscription(self, subscription) -> CheckoutResult:
         tenant = subscription.organization or subscription.owner
         phone = getattr(tenant, "phone", "") or getattr(subscription.owner, "phone", "")
-        amount = subscription.plan.monthly_price
+        return self.create_charge(
+            amount=subscription.plan.monthly_price,
+            currency=subscription.plan.currency,
+            reference=str(subscription.id),
+            description=f"{subscription.plan.name} subscription",
+            phone=phone,
+        )
 
+    def cancel_subscription(self, subscription) -> None:
+        # No recurring mandate to cancel on Daraja's side — local status
+        # change (in services.py) is sufficient; renewal simply stops being
+        # prompted.
+        return None
+
+    def create_charge(self, *, amount, currency, reference, description, phone="", customer_id="") -> CheckoutResult:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         password = base64.b64encode(
             f"{settings.MPESA_SHORTCODE}{settings.MPESA_PASSKEY}{timestamp}".encode()
@@ -59,13 +72,13 @@ class MpesaProvider(PaymentProvider):
             "Password": password,
             "Timestamp": timestamp,
             "TransactionType": "CustomerPayBillOnline",
-            "Amount": int(amount),
+            "Amount": int(float(amount)),
             "PartyA": phone,
             "PartyB": settings.MPESA_SHORTCODE,
             "PhoneNumber": phone,
             "CallBackURL": f"{settings.PUBLIC_BASE_URL}/api/v1/webhooks/mpesa/",
-            "AccountReference": str(subscription.id),
-            "TransactionDesc": f"{subscription.plan.name} subscription",
+            "AccountReference": reference,
+            "TransactionDesc": description,
         }
         response = requests.post(
             f"{self.base_url}/mpesa/stkpush/v1/processrequest",
@@ -76,12 +89,6 @@ class MpesaProvider(PaymentProvider):
         response.raise_for_status()
         data = response.json()
         return CheckoutResult(provider_reference=data.get("CheckoutRequestID", ""), raw=data)
-
-    def cancel_subscription(self, subscription) -> None:
-        # No recurring mandate to cancel on Daraja's side — local status
-        # change (in services.py) is sufficient; renewal simply stops being
-        # prompted.
-        return None
 
     def verify_payment(self, payload: dict) -> bool:
         stk_callback = payload.get("Body", {}).get("stkCallback", {})

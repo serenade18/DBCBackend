@@ -43,6 +43,24 @@ class StripeProvider(PaymentProvider):
             return
         self._stripe.Subscription.delete(subscription.provider_subscription_id)
 
+    def create_charge(self, *, amount, currency, reference, description, phone="", customer_id="") -> CheckoutResult:
+        session = self._stripe.checkout.Session.create(
+            mode="payment",
+            line_items=[{
+                "price_data": {
+                    "currency": currency.lower(),
+                    "unit_amount": int(float(amount) * 100),
+                    "product_data": {"name": description},
+                },
+                "quantity": 1,
+            }],
+            success_url=f"{settings.FRONTEND_URL}/orders/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.FRONTEND_URL}/orders/cancelled",
+            client_reference_id=reference,
+            metadata={"order_reference": reference},
+        )
+        return CheckoutResult(provider_reference=session["id"], redirect_url=session.get("url"), raw=session)
+
     def verify_payment(self, payload: dict) -> bool:
         # Real verification happens via handle_webhook's signature check;
         # this covers ad-hoc client-side confirmation calls.

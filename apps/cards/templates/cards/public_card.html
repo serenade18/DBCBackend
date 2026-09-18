@@ -97,7 +97,7 @@
   <section aria-label="Links">
     <h2>Links</h2>
     <nav class="links">
-      {% for link in links %}<a class="link-btn" href="{{ link.url }}" rel="noopener" target="_blank">{{ link.title }}</a>{% endfor %}
+      {% for link in links %}<a class="link-btn" href="{% url 'public-link-click' vcard.slug link.id %}" rel="noopener" target="_blank">{{ link.title }}</a>{% endfor %}
     </nav>
   </section>
   {% endif %}

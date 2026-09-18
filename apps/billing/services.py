@@ -96,11 +96,36 @@ def start_checkout(*, subscription: Subscription, provider_name: str):
     return result
 
 
+def start_order_checkout(*, order, provider_name: str):
+    """One-off charge checkout for a physical card Order (§32), as opposed
+    to the recurring subscription flow in start_checkout()."""
+    provider = get_provider(provider_name)
+    tenant_user = order.customer
+    phone = getattr(tenant_user, "phone", "") if tenant_user else ""
+
+    result = provider.create_charge(
+        amount=order.total, currency=order.currency, reference=str(order.id),
+        description=f"Order {order.order_number}", phone=phone,
+    )
+
+    Payment.objects.create(
+        organization=order.organization,
+        owner=order.customer if not order.organization else None,
+        order=order,
+        provider=provider_name,
+        provider_reference=result.provider_reference,
+        amount=order.total,
+        currency=order.currency,
+        status=PaymentStatus.PENDING,
+    )
+    return result
+
+
 def apply_provider_event(*, provider: str, event_type: str, data: dict):
     """Idempotently reconciles a verified webhook event into Payment /
     Subscription state (§31: 'all provider callbacks must be idempotent')."""
     reference = data.get("provider_reference") or data.get("id") or data.get("CheckoutRequestID")
-    payment = Payment.objects.filter(provider=provider, provider_reference=reference).select_related("subscription").first()
+    payment = Payment.objects.filter(provider=provider, provider_reference=reference).select_related("subscription", "order").first()
 
     success_events = {"payment.successful", "checkout.session.completed", "invoice.paid", "invoice_payment.paid"}
     failure_events = {"payment.failed", "invoice.payment_failed"}
@@ -117,6 +142,8 @@ def apply_provider_event(*, provider: str, event_type: str, data: dict):
 
         if payment.subscription:
             _activate_period(payment.subscription)
+        if payment.order:
+            _mark_order_paid(payment.order)
         _notify_payment(payment, success=True)
 
     elif event_type in failure_events:
@@ -128,6 +155,17 @@ def apply_provider_event(*, provider: str, event_type: str, data: dict):
             payment.subscription.status = SubscriptionStatus.PAST_DUE
             payment.subscription.save(update_fields=["status"])
         _notify_payment(payment, success=False)
+
+
+def _mark_order_paid(order):
+    from apps.orders.models import OrderStatus, PaymentStatus as OrderPaymentStatus
+
+    if order.payment_status == OrderPaymentStatus.PAID:
+        return  # idempotent no-op
+    order.payment_status = OrderPaymentStatus.PAID
+    order.status = OrderStatus.PAID
+    order.save(update_fields=["payment_status", "status"])
+    order.shipping_events.create(status=OrderStatus.PAID, description="Payment received.")
 
 
 def _activate_period(subscription: Subscription, period_days: int = 30):

@@ -1,5 +1,5 @@
 from django.core.cache import cache
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 from rest_framework.generics import RetrieveAPIView
@@ -97,10 +97,33 @@ class PublicVCardAnalyticsView(APIView):
 @require_GET
 def public_vcf_download(request, slug):
     vcard = _get_public_vcard_or_404(slug)
+
+    from apps.analytics.tasks import record_contact_download
+    from apps.core.utils import get_client_ip
+
+    record_contact_download.delay(str(vcard.id), get_client_ip(request))
+
     vcf_bytes = build_vcf(vcard)
     response = HttpResponse(vcf_bytes, content_type="text/vcard")
     response["Content-Disposition"] = f'attachment; filename="{vcard.slug}.vcf"'
     return response
+
+
+@require_GET
+def track_link_click(request, slug, link_id):
+    """Redirect-through tracker so a plain <a href> click can be logged
+    server-side with no JavaScript (mirrors the no-JS .vcf download)."""
+    vcard = _get_public_vcard_or_404(slug)
+    link = get_object_or_404(vcard.links, id=link_id, is_visible=True)
+
+    from apps.analytics.tasks import record_link_click
+    from apps.core.utils import get_client_ip
+
+    record_link_click.delay(
+        str(vcard.id), str(link.id), get_client_ip(request),
+        request.META.get("HTTP_REFERER", ""), request.META.get("HTTP_USER_AGENT", ""),
+    )
+    return HttpResponseRedirect(link.url)
 
 
 @require_GET

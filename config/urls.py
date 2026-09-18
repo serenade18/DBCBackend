@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.generic import TemplateView
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -35,6 +37,23 @@ urlpatterns = [
     # Public, unauthenticated surfaces
     path("directory/", include("apps.directory.public_urls")),
     path("", include("apps.cards.public_urls")),  # /@<slug>/, /c/<slug>/, .vcf, QR
+]
+
+if settings.DEBUG:
+    urlpatterns += static(
+        '/assets/',
+        document_root=settings.REACT_BUILD_DIR / 'assets'
+    )
+    urlpatterns += [
+        re_path(r'^favicon\.png$', serve, {
+            'document_root': settings.REACT_BUILD_DIR,
+            'path': 'favicon.png'
+        }),
+    ]
+
+# Serve React's index.html for all other routes
+urlpatterns += [
+    re_path(r'^(?!assets/|static/|media/).*$', TemplateView.as_view(template_name='index.html')),
 ]
 
 if settings.DEBUG:

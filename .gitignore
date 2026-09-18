@@ -1,0 +1,11 @@
+venv/
+venv/
+media/
+static/
+*.log
+*.sqlite
+*.pyc
+__pycache__/
+.DS_Store
+.idea/
+.vscode/

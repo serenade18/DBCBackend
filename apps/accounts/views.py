@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -15,11 +16,13 @@ from apps.accounts.serializers import (
     CustomTokenObtainPairSerializer,
     EmailVerifySerializer,
     ForgotPasswordSerializer,
+    LogoutSerializer,
     RegisterSerializer,
     ResetPasswordSerializer,
     UserSerializer,
 )
 from apps.accounts.tokens import email_verification_token
+from apps.core.serializers import DetailMessageSerializer
 from apps.core.utils import log_audit_event
 
 User = get_user_model()
@@ -58,6 +61,7 @@ class LoginView(TokenObtainPairView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=LogoutSerializer, responses={205: None, 400: DetailMessageSerializer})
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
@@ -83,6 +87,7 @@ class MeView(generics.RetrieveUpdateAPIView):
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=ChangePasswordSerializer, responses=DetailMessageSerializer)
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -96,6 +101,7 @@ class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "auth"
 
+    @extend_schema(request=ForgotPasswordSerializer, responses=DetailMessageSerializer)
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -117,6 +123,7 @@ class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "auth"
 
+    @extend_schema(request=ResetPasswordSerializer, responses=DetailMessageSerializer)
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -141,6 +148,7 @@ class ResendVerificationEmailView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_scope = "auth"
 
+    @extend_schema(request=None, responses=DetailMessageSerializer)
     def post(self, request):
         if request.user.email_verified:
             return Response({"detail": "Email already verified."})
@@ -151,6 +159,7 @@ class ResendVerificationEmailView(APIView):
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(request=EmailVerifySerializer, responses=DetailMessageSerializer)
     def post(self, request):
         serializer = EmailVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

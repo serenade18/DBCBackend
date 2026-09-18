@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -5,7 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.billing.models import Payment, Plan, Subscription, SubscriptionStatus
-from apps.billing.serializers import CheckoutSerializer, PaymentSerializer, PlanSerializer, SubscriptionSerializer
+from apps.billing.serializers import (
+    CheckoutResultSerializer,
+    CheckoutSerializer,
+    PaymentSerializer,
+    PlanSerializer,
+    SubscriptionSerializer,
+)
 from apps.billing.services import get_or_create_default_subscription, start_checkout
 from apps.core.permissions import get_member_role
 from apps.core.utils import log_audit_event
@@ -34,6 +41,7 @@ class PlanListView(ListAPIView):
 class SubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses=SubscriptionSerializer)
     def get(self, request):
         organization, owner = resolve_tenant(request)
         if organization is None and owner is None:
@@ -45,6 +53,7 @@ class SubscriptionView(APIView):
 class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=CheckoutSerializer, responses={201: CheckoutResultSerializer})
     def post(self, request):
         serializer = CheckoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -80,6 +89,7 @@ class CheckoutView(APIView):
 class CancelSubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses=SubscriptionSerializer)
     def post(self, request):
         organization, owner = resolve_tenant(request)
         if organization is not None and get_member_role(request.user, organization) not in {"owner", "admin"}:
@@ -99,6 +109,7 @@ class CancelSubscriptionView(APIView):
 class ReactivateSubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses=SubscriptionSerializer)
     def post(self, request):
         organization, owner = resolve_tenant(request)
         if organization is not None and get_member_role(request.user, organization) not in {"owner", "admin"}:

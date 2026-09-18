@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from apps.appointments.serializers import (
     AppointmentServiceSerializer,
     AppointmentStatusUpdateSerializer,
     AvailabilityRuleSerializer,
+    AvailabilitySlotsResponseSerializer,
     PublicBookingSerializer,
 )
 from apps.appointments.services import SlotUnavailableError, book_appointment, get_available_slots
@@ -68,6 +70,7 @@ class PublicAvailabilityView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "public-card"
 
+    @extend_schema(responses=AvailabilitySlotsResponseSerializer)
     def get(self, request, vcard_slug):
         vcard = get_object_or_404(VCard, slug=vcard_slug)
         service_id = request.query_params.get("service_id")
@@ -93,6 +96,7 @@ class PublicBookingView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "enquiry-submit"
 
+    @extend_schema(request=PublicBookingSerializer, responses={201: AppointmentSerializer})
     def post(self, request, vcard_slug):
         vcard = get_object_or_404(VCard, slug=vcard_slug)
         if not vcard.is_publicly_viewable:

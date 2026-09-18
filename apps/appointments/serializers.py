@@ -33,6 +33,15 @@ class AppointmentStatusUpdateSerializer(serializers.ModelSerializer):
         fields = ["status", "notes"]
 
 
+class AvailabilitySlotSerializer(serializers.Serializer):
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
+
+
+class AvailabilitySlotsResponseSerializer(serializers.Serializer):
+    slots = AvailabilitySlotSerializer(many=True)
+
+
 class PublicBookingSerializer(serializers.Serializer):
     service_id = serializers.UUIDField()
     date = serializers.DateField()

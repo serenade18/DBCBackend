@@ -51,6 +51,10 @@ class VCardCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class PublicVCardAnalyticsSerializer(serializers.Serializer):
+    total_views = serializers.IntegerField()
+
+
 class VCardPublicSerializer(serializers.ModelSerializer):
     """Only fields that are safe to expose with no authentication (§35, §36:
     never private analytics/billing/internal org info)."""

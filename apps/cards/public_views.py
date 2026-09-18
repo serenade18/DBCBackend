@@ -2,6 +2,7 @@ from django.core.cache import cache
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
+from drf_spectacular.utils import extend_schema
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -9,7 +10,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.cards.models import VCard
-from apps.cards.serializers import VCardPublicSerializer
+from apps.cards.serializers import PublicVCardAnalyticsSerializer, VCardPublicSerializer
 from apps.nfc_qr.qr import generate_qr_for_vcard
 from apps.nfc_qr.vcard import build_vcf
 
@@ -86,6 +87,7 @@ class PublicVCardAnalyticsView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "public-card"
 
+    @extend_schema(responses=PublicVCardAnalyticsSerializer)
     def get(self, request, slug):
         vcard = _get_public_vcard_or_404(slug)
         from apps.analytics.models import CardView

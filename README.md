@@ -48,6 +48,7 @@ docker compose up --build
 - Authenticated API: `/api/v1/...`. Public, unauthenticated surfaces (card renderer, `.vcf`, QR,
   directory search, webhooks, health checks) are mounted outside `/api/v1/` — see `config/urls.py`.
 - API schema: `/api/v1/schema/`, Swagger UI: `/api/v1/docs/`.
+- Postman collection + environment: `docs/postman/` (see `docs/postman/README.md` to import or regenerate).
 
 ## Status
 

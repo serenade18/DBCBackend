@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -23,6 +25,15 @@ class VCardAnalyticsView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("vcard", OpenApiTypes.UUID, description="VCard id (required)"),
+            OpenApiParameter("period", OpenApiTypes.STR, description="today|7d|30d|90d|12m|custom"),
+            OpenApiParameter("start", OpenApiTypes.DATE, description="Required when period=custom"),
+            OpenApiParameter("end", OpenApiTypes.DATE, description="Required when period=custom"),
+        ],
+        responses={200: OpenApiTypes.OBJECT},
+    )
     def get(self, request):
         vcard_id = request.query_params.get("vcard")
         if not vcard_id:

@@ -61,6 +61,10 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
 
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
 

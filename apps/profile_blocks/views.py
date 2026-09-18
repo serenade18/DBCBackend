@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -93,6 +94,7 @@ class ProfileBlockDetailView(VCardScopedDetailView):
 class ProfileBlockReorderView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=ReorderSerializer, responses={200: ProfileBlockSerializer(many=True)})
     def post(self, request, vcard_id):
         vcard = _get_manageable_vcard(request.user, vcard_id)
         if vcard is None:

@@ -1,8 +1,11 @@
 from django.db import connection
 from django.db.utils import OperationalError
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.core.serializers import ComponentHealthSerializer, HealthSerializer
 
 try:
     import redis as redis_lib
@@ -34,6 +37,7 @@ class HealthView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(responses=HealthSerializer)
     def get(self, request):
         db_ok = _check_database()
         redis_ok = _check_redis()
@@ -53,6 +57,7 @@ class DatabaseHealthView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(responses=ComponentHealthSerializer)
     def get(self, request):
         ok = _check_database()
         return Response({"database": "healthy" if ok else "unhealthy"}, status=200 if ok else 503)
@@ -62,6 +67,7 @@ class RedisHealthView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(responses=ComponentHealthSerializer)
     def get(self, request):
         ok = _check_redis()
         return Response({"redis": "healthy" if ok else "unhealthy"}, status=200 if ok else 503)

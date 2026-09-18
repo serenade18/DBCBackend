@@ -1,0 +1,6770 @@
+openapi: 3.0.3
+info:
+  title: Digital Business Card SaaS API
+  version: 1.0.0
+  description: API for the digital business card / NFC identity platform.
+paths:
+  /api/public/cards/{slug}/:
+    get:
+      operationId: api_public_cards_retrieve
+      description: |-
+        JSON counterpart of the same public data (§39) for API/mobile
+        consumers — never exposes private analytics/billing/internal org info.
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCardPublic'
+          description: ''
+  /api/public/cards/{slug}/analytics/:
+    get:
+      operationId: api_public_cards_analytics_retrieve
+      description: |-
+        Only a small, non-identifying aggregate — never referrer/device/
+        country breakdowns or raw events (§25, §39).
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicVCardAnalytics'
+          description: ''
+  /api/v1/analytics/:
+    get:
+      operationId: api_v1_analytics_retrieve
+      description: GET /api/v1/analytics/?vcard=<id>&period=7d|30d|90d|12m|today|custom&start&end
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+        description: Required when period=custom
+      - in: query
+        name: period
+        schema:
+          type: string
+        description: today|7d|30d|90d|12m|custom
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+        description: Required when period=custom
+      - in: query
+        name: vcard
+        schema:
+          type: string
+          format: uuid
+        description: VCard id (required)
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/appointments/:
+    get:
+      operationId: api_v1_appointments_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAppointmentList'
+          description: ''
+  /api/v1/appointments/{id}/:
+    get:
+      operationId: api_v1_appointments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+    patch:
+      operationId: api_v1_appointments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentStatusUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_appointments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/appointments/availability/{id}/:
+    get:
+      operationId: api_v1_appointments_availability_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRule'
+          description: ''
+    put:
+      operationId: api_v1_appointments_availability_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRule'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRule'
+          description: ''
+    patch:
+      operationId: api_v1_appointments_availability_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAvailabilityRule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAvailabilityRule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAvailabilityRule'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRule'
+          description: ''
+    delete:
+      operationId: api_v1_appointments_availability_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/appointments/public/{vcard_slug}/availability/:
+    get:
+      operationId: api_v1_appointments_public_availability_retrieve
+      parameters:
+      - in: path
+        name: vcard_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilitySlotsResponse'
+          description: ''
+  /api/v1/appointments/public/{vcard_slug}/book/:
+    post:
+      operationId: api_v1_appointments_public_book_create
+      parameters:
+      - in: path
+        name: vcard_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicBooking'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/services/{id}/:
+    get:
+      operationId: api_v1_appointments_services_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentService'
+          description: ''
+    put:
+      operationId: api_v1_appointments_services_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentService'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentService'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentService'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentService'
+          description: ''
+    patch:
+      operationId: api_v1_appointments_services_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentService'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentService'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentService'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentService'
+          description: ''
+    delete:
+      operationId: api_v1_appointments_services_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/appointments/vcards/{vcard_id}/availability/:
+    get:
+      operationId: api_v1_appointments_vcards_availability_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAvailabilityRuleList'
+          description: ''
+    post:
+      operationId: api_v1_appointments_vcards_availability_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRule'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRule'
+          description: ''
+  /api/v1/appointments/vcards/{vcard_id}/services/:
+    get:
+      operationId: api_v1_appointments_vcards_services_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAppointmentServiceList'
+          description: ''
+    post:
+      operationId: api_v1_appointments_vcards_services_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentService'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentService'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentService'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentService'
+          description: ''
+  /api/v1/auth/change-password/:
+    post:
+      operationId: api_v1_auth_change_password_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailMessage'
+          description: ''
+  /api/v1/auth/forgot-password/:
+    post:
+      operationId: api_v1_auth_forgot_password_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ForgotPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ForgotPassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailMessage'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: api_v1_auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPair'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomTokenObtainPair'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: api_v1_auth_logout_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Logout'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '205':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailMessage'
+          description: ''
+  /api/v1/auth/me/:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: api_v1_auth_me_update
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: api_v1_auth_me_partial_update
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: api_v1_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/register/:
+    post:
+      operationId: api_v1_auth_register_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/v1/auth/resend-verification/:
+    post:
+      operationId: api_v1_auth_resend_verification_create
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailMessage'
+          description: ''
+  /api/v1/auth/reset-password/:
+    post:
+      operationId: api_v1_auth_reset_password_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailMessage'
+          description: ''
+  /api/v1/auth/verify-email/:
+    post:
+      operationId: api_v1_auth_verify_email_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailVerify'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailMessage'
+          description: ''
+  /api/v1/billing/cancel/:
+    post:
+      operationId: api_v1_billing_cancel_create
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/billing/checkout/:
+    post:
+      operationId: api_v1_billing_checkout_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResult'
+          description: ''
+  /api/v1/billing/invoices/:
+    get:
+      operationId: api_v1_billing_invoices_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentList'
+          description: ''
+  /api/v1/billing/plans/:
+    get:
+      operationId: api_v1_billing_plans_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlanList'
+          description: ''
+  /api/v1/billing/reactivate/:
+    post:
+      operationId: api_v1_billing_reactivate_create
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/billing/subscription/:
+    get:
+      operationId: api_v1_billing_subscription_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/blocks/{id}/:
+    get:
+      operationId: api_v1_blocks_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBlock'
+          description: ''
+    put:
+      operationId: api_v1_blocks_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileBlock'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfileBlock'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfileBlock'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBlock'
+          description: ''
+    patch:
+      operationId: api_v1_blocks_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfileBlock'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfileBlock'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfileBlock'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBlock'
+          description: ''
+    delete:
+      operationId: api_v1_blocks_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/directory/vcards/{vcard_id}/:
+    get:
+      operationId: api_v1_directory_vcards_retrieve
+      description: |-
+        Authenticated: toggle a card's own directory visibility/category
+        (§6 comment: 'visibility toggle, category assignment').
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryVisibility'
+          description: ''
+    put:
+      operationId: api_v1_directory_vcards_update
+      description: |-
+        Authenticated: toggle a card's own directory visibility/category
+        (§6 comment: 'visibility toggle, category assignment').
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryVisibility'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DirectoryVisibility'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DirectoryVisibility'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryVisibility'
+          description: ''
+    patch:
+      operationId: api_v1_directory_vcards_partial_update
+      description: |-
+        Authenticated: toggle a card's own directory visibility/category
+        (§6 comment: 'visibility toggle, category assignment').
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDirectoryVisibility'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDirectoryVisibility'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDirectoryVisibility'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryVisibility'
+          description: ''
+  /api/v1/enquiries/:
+    get:
+      operationId: api_v1_enquiries_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEnquiryList'
+          description: ''
+  /api/v1/enquiries/{id}/:
+    get:
+      operationId: api_v1_enquiries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enquiry'
+          description: ''
+    put:
+      operationId: api_v1_enquiries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnquiryStatusUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EnquiryStatusUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnquiryStatusUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnquiryStatusUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_enquiries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEnquiryStatusUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEnquiryStatusUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEnquiryStatusUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnquiryStatusUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_enquiries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/enquiries/submit/{vcard_slug}/:
+    post:
+      operationId: api_v1_enquiries_submit_create
+      description: |-
+        Unauthenticated submit endpoint (§18). Handles both a plain HTML <form>
+        POST from the no-JS public card page (redirects back with ?sent=1) and a
+        JSON POST from any future JS client (returns 201 JSON).
+      parameters:
+      - in: path
+        name: vcard_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicEnquirySubmit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicEnquirySubmit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicEnquirySubmit'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enquiry'
+          description: ''
+  /api/v1/gallery-items/{id}/:
+    get:
+      operationId: api_v1_gallery_items_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryItem'
+          description: ''
+    put:
+      operationId: api_v1_gallery_items_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GalleryItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GalleryItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GalleryItem'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryItem'
+          description: ''
+    patch:
+      operationId: api_v1_gallery_items_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGalleryItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGalleryItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGalleryItem'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryItem'
+          description: ''
+    delete:
+      operationId: api_v1_gallery_items_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/links/{id}/:
+    get:
+      operationId: api_v1_links_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileLink'
+          description: ''
+    put:
+      operationId: api_v1_links_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileLink'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfileLink'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfileLink'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileLink'
+          description: ''
+    patch:
+      operationId: api_v1_links_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfileLink'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfileLink'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfileLink'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileLink'
+          description: ''
+    delete:
+      operationId: api_v1_links_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/nfc/:
+    get:
+      operationId: api_v1_nfc_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNfcCardList'
+          description: ''
+    post:
+      operationId: api_v1_nfc_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/:
+    get:
+      operationId: api_v1_nfc_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/activate/:
+    post:
+      operationId: api_v1_nfc_activate_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/assign/:
+    post:
+      operationId: api_v1_nfc_assign_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/reassign/:
+    post:
+      operationId: api_v1_nfc_reassign_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/retire/:
+    post:
+      operationId: api_v1_nfc_retire_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/suspend/:
+    post:
+      operationId: api_v1_nfc_suspend_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NfcCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/nfc/{id}/write-instructions/:
+    get:
+      operationId: api_v1_nfc_write_instructions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCard'
+          description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: api_v1_notifications_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/v1/notifications/{id}/:
+    get:
+      operationId: api_v1_notifications_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/{id}/read/:
+    post:
+      operationId: api_v1_notifications_read_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/mark-all-read/:
+    post:
+      operationId: api_v1_notifications_mark_all_read_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/unread-count/:
+    get:
+      operationId: api_v1_notifications_unread_count_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/orders/:
+    get:
+      operationId: api_v1_orders_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderList'
+          description: ''
+    post:
+      operationId: api_v1_orders_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Order'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Order'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/v1/orders/{id}/:
+    get:
+      operationId: api_v1_orders_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    patch:
+      operationId: api_v1_orders_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrder'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/v1/orders/{id}/status_update/:
+    patch:
+      operationId: api_v1_orders_status_update_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrder'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/v1/orders/products/:
+    get:
+      operationId: api_v1_orders_products_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPhysicalCardProductList'
+          description: ''
+  /api/v1/organizations/:
+    get:
+      operationId: api_v1_organizations_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+    post:
+      operationId: api_v1_organizations_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}/:
+    get:
+      operationId: api_v1_organizations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    patch:
+      operationId: api_v1_organizations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}/members/:
+    get:
+      operationId: api_v1_organizations_members_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}/members/{member_id}/:
+    patch:
+      operationId: api_v1_organizations_members_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}/members/invite/:
+    post:
+      operationId: api_v1_organizations_members_invite_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/products/{id}/:
+    get:
+      operationId: api_v1_products_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    put:
+      operationId: api_v1_products_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Product'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: api_v1_products_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: api_v1_products_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/services/{id}/:
+    get:
+      operationId: api_v1_services_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+          description: ''
+    put:
+      operationId: api_v1_services_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Service'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Service'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+          description: ''
+    patch:
+      operationId: api_v1_services_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedService'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedService'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedService'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+          description: ''
+    delete:
+      operationId: api_v1_services_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/templates/:
+    get:
+      operationId: api_v1_templates_list
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: is_premium
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCardTemplateList'
+          description: ''
+  /api/v1/templates/{id}/:
+    get:
+      operationId: api_v1_templates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this card template.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardTemplate'
+          description: ''
+  /api/v1/testimonials/{id}/:
+    get:
+      operationId: api_v1_testimonials_retrieve
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testimonial'
+          description: ''
+    put:
+      operationId: api_v1_testimonials_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Testimonial'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Testimonial'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Testimonial'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testimonial'
+          description: ''
+    patch:
+      operationId: api_v1_testimonials_partial_update
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTestimonial'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTestimonial'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTestimonial'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testimonial'
+          description: ''
+    delete:
+      operationId: api_v1_testimonials_destroy
+      description: Base for the flat /api/v1/<things>/{id}/ endpoints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/vcards/:
+    get:
+      operationId: api_v1_vcards_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVCardListList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCardCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VCardCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VCardCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCardCreate'
+          description: ''
+  /api/v1/vcards/{id}/:
+    get:
+      operationId: api_v1_vcards_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+    put:
+      operationId: api_v1_vcards_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+    patch:
+      operationId: api_v1_vcards_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVCard'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+    delete:
+      operationId: api_v1_vcards_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/vcards/{id}/assign/:
+    post:
+      operationId: api_v1_vcards_assign_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+  /api/v1/vcards/{id}/contact/:
+    get:
+      operationId: api_v1_vcards_contact_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+  /api/v1/vcards/{id}/publish/:
+    post:
+      operationId: api_v1_vcards_publish_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+  /api/v1/vcards/{id}/qr/:
+    get:
+      operationId: api_v1_vcards_qr_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+  /api/v1/vcards/{id}/unassign/:
+    post:
+      operationId: api_v1_vcards_unassign_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+  /api/v1/vcards/{id}/unpublish/:
+    post:
+      operationId: api_v1_vcards_unpublish_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VCard'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VCard'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCard'
+          description: ''
+  /api/v1/vcards/{vcard_id}/blocks/:
+    get:
+      operationId: api_v1_vcards_blocks_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProfileBlockList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_blocks_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileBlock'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfileBlock'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfileBlock'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBlock'
+          description: ''
+  /api/v1/vcards/{vcard_id}/blocks/reorder/:
+    post:
+      operationId: api_v1_vcards_blocks_reorder_create
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reorder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Reorder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Reorder'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfileBlock'
+          description: ''
+  /api/v1/vcards/{vcard_id}/gallery-items/:
+    get:
+      operationId: api_v1_vcards_gallery_items_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGalleryItemList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_gallery_items_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GalleryItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GalleryItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GalleryItem'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryItem'
+          description: ''
+  /api/v1/vcards/{vcard_id}/links/:
+    get:
+      operationId: api_v1_vcards_links_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProfileLinkList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_links_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileLink'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfileLink'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfileLink'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileLink'
+          description: ''
+  /api/v1/vcards/{vcard_id}/products/:
+    get:
+      operationId: api_v1_vcards_products_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_products_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Product'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/v1/vcards/{vcard_id}/services/:
+    get:
+      operationId: api_v1_vcards_services_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_services_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Service'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Service'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+          description: ''
+  /api/v1/vcards/{vcard_id}/testimonials/:
+    get:
+      operationId: api_v1_vcards_testimonials_list
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTestimonialList'
+          description: ''
+    post:
+      operationId: api_v1_vcards_testimonials_create
+      description: |-
+        Base for the six content types hung off a VCard (blocks, links,
+        services, products, testimonials, gallery items): list/create scoped to
+        a parent VCard the requesting user may manage.
+      parameters:
+      - in: path
+        name: vcard_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Testimonial'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Testimonial'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Testimonial'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testimonial'
+          description: ''
+  /api/v1/webhooks/mpesa/:
+    post:
+      operationId: api_v1_webhooks_mpesa_create
+      description: Provider-signed webhook — payload shape is defined by the provider,
+        not this API. Not meant to be called by hand.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/webhooks/sasapay/:
+    post:
+      operationId: api_v1_webhooks_sasapay_create
+      description: Provider-signed webhook — payload shape is defined by the provider,
+        not this API. Not meant to be called by hand.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/webhooks/stripe/:
+    post:
+      operationId: api_v1_webhooks_stripe_create
+      description: Provider-signed webhook — payload shape is defined by the provider,
+        not this API. Not meant to be called by hand.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /directory/:
+    get:
+      operationId: directory_list
+      description: |-
+        GET /directory/?q=&category=&location=&industry=&company=&profession=
+        (§35). Unauthenticated, rate-limited, only opted-in public cards.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - directory
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDirectoryEntryList'
+          description: ''
+  /health/:
+    get:
+      operationId: health_retrieve
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+  /health/db/:
+    get:
+      operationId: health_db_retrieve
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentHealth'
+          description: ''
+  /health/redis/:
+    get:
+      operationId: health_redis_retrieve
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentHealth'
+          description: ''
+components:
+  schemas:
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        service:
+          type: string
+          format: uuid
+        customer_name:
+          type: string
+          maxLength: 255
+        customer_email:
+          type: string
+          format: email
+          maxLength: 254
+        customer_phone:
+          type: string
+          maxLength: 32
+        date:
+          type: string
+          format: date
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/Status28fEnum'
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - customer_email
+      - customer_name
+      - date
+      - end_time
+      - id
+      - service
+      - start_time
+      - vcard
+    AppointmentService:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        duration_minutes:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+      - vcard
+    AppointmentStatusUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status28fEnum'
+        notes:
+          type: string
+    AvailabilityRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        weekday:
+          allOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        timezone:
+          type: string
+          maxLength: 64
+      required:
+      - end_time
+      - id
+      - start_time
+      - vcard
+      - weekday
+    AvailabilitySlot:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+      required:
+      - end_time
+      - start_time
+    AvailabilitySlotsResponse:
+      type: object
+      properties:
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilitySlot'
+      required:
+      - slots
+    CardTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        preview_image:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        category:
+          type: string
+          readOnly: true
+        configuration:
+          readOnly: true
+        is_premium:
+          type: boolean
+          readOnly: true
+      required:
+      - category
+      - configuration
+      - id
+      - is_premium
+      - name
+      - preview_image
+      - slug
+    ChangePassword:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+        new_password:
+          type: string
+          writeOnly: true
+      required:
+      - new_password
+      - old_password
+    Checkout:
+      type: object
+      properties:
+        plan_id:
+          type: string
+          format: uuid
+        provider:
+          $ref: '#/components/schemas/CheckoutProviderEnum'
+        organization_id:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - plan_id
+      - provider
+    CheckoutProviderEnum:
+      enum:
+      - stripe
+      - mpesa
+      - sasapay
+      type: string
+      description: |-
+        * `stripe` - stripe
+        * `mpesa` - mpesa
+        * `sasapay` - sasapay
+    CheckoutResult:
+      type: object
+      properties:
+        redirect_url:
+          type: string
+          nullable: true
+        provider_reference:
+          type: string
+      required:
+      - provider_reference
+      - redirect_url
+    ComponentHealth:
+      type: object
+      properties:
+        database:
+          $ref: '#/components/schemas/RedisEnum'
+        redis:
+          $ref: '#/components/schemas/RedisEnum'
+    CustomTokenObtainPair:
+      type: object
+      description: |-
+        Adds basic user info to the token response so the frontend doesn't
+        need a second round-trip to /auth/me/ immediately after login.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    DetailMessage:
+      type: object
+      description: |-
+        Generic {"detail": "..."} response shape used by several plain
+        APIViews across the project — documented once here for OpenAPI/Postman.
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    DirectoryEntry:
+      type: object
+      description: |-
+        §36: only what's safe for a public listing — never private email,
+        private phone, internal org info, analytics, or billing data.
+      properties:
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          readOnly: true
+        job_title:
+          type: string
+          readOnly: true
+        company_name:
+          type: string
+          readOnly: true
+        location:
+          type: string
+          readOnly: true
+        industry:
+          type: string
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+        profile_photo:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        is_verified:
+          type: boolean
+          readOnly: true
+      required:
+      - bio
+      - company_name
+      - display_name
+      - industry
+      - is_verified
+      - job_title
+      - location
+      - profile_photo
+      - slug
+    DirectoryVisibility:
+      type: object
+      properties:
+        is_directory_visible:
+          type: boolean
+        industry:
+          type: string
+          maxLength: 255
+    EmailVerify:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+      required:
+      - token
+      - uid
+    Enquiry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        message:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status1d0Enum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - id
+      - message
+      - name
+      - vcard
+    EnquiryStatusUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status1d0Enum'
+    ForgotPassword:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    GalleryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+      required:
+      - id
+      - image
+      - vcard
+    Health:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/RedisEnum'
+        database:
+          $ref: '#/components/schemas/RedisEnum'
+        redis:
+          $ref: '#/components/schemas/RedisEnum'
+      required:
+      - database
+      - redis
+      - status
+    Logout:
+      type: object
+      properties:
+        refresh:
+          type: string
+      required:
+      - refresh
+    MaterialEnum:
+      enum:
+      - pet_plastic
+      - wood
+      - metal
+      type: string
+      description: |-
+        * `pet_plastic` - PET Plastic
+        * `wood` - Wood
+        * `metal` - Metal
+    NfcCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        uid:
+          type: string
+          description: Chip UID reported by the NFC hardware.
+          maxLength: 64
+        serial_number:
+          type: string
+          maxLength: 64
+        material:
+          $ref: '#/components/schemas/MaterialEnum'
+        vcard:
+          type: string
+          format: uuid
+          nullable: true
+        order:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/NfcCardStatusEnum'
+          readOnly: true
+        activated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        write_payload:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - activated_at
+      - created_at
+      - id
+      - status
+      - uid
+      - write_payload
+    NfcCardStatusEnum:
+      enum:
+      - inventory
+      - reserved
+      - assigned
+      - active
+      - blocked
+      - retired
+      type: string
+      description: |-
+        * `inventory` - Inventory
+        * `reserved` - Reserved
+        * `assigned` - Assigned
+        * `active` - Active
+        * `blocked` - Blocked
+        * `retired` - Retired
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        link_url:
+          type: string
+          readOnly: true
+        metadata:
+          readOnly: true
+        is_read:
+          type: boolean
+          readOnly: true
+        read_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - body
+      - created_at
+      - id
+      - is_read
+      - link_url
+      - metadata
+      - read_at
+      - title
+      - type
+    NotificationTypeEnum:
+      enum:
+      - welcome
+      - email_verification
+      - password_reset
+      - new_enquiry
+      - new_appointment
+      - appointment_reminder
+      - payment_successful
+      - payment_failed
+      - subscription_expiring
+      - order_received
+      - order_shipped
+      - order_delivered
+      - team_invitation
+      type: string
+      description: |-
+        * `welcome` - Welcome
+        * `email_verification` - Email verification
+        * `password_reset` - Password reset
+        * `new_enquiry` - New enquiry
+        * `new_appointment` - New appointment
+        * `appointment_reminder` - Appointment reminder
+        * `payment_successful` - Payment successful
+        * `payment_failed` - Payment failed
+        * `subscription_expiring` - Subscription expiring
+        * `order_received` - Order received
+        * `order_shipped` - Order shipped
+        * `order_delivered` - Order delivered
+        * `team_invitation` - Team invitation
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        customer:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        order_number:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusAd3Enum'
+          readOnly: true
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          readOnly: true
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        shipping_fee:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        shipping_address:
+          allOf:
+          - $ref: '#/components/schemas/ShippingAddress'
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          readOnly: true
+        shipping_events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShippingEvent'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - currency
+      - customer
+      - id
+      - items
+      - order_number
+      - organization
+      - payment_status
+      - shipping_address
+      - shipping_events
+      - shipping_fee
+      - status
+      - subtotal
+      - tax
+      - total
+      - updated_at
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        product:
+          allOf:
+          - $ref: '#/components/schemas/PhysicalCardProduct'
+          readOnly: true
+        quantity:
+          type: integer
+          readOnly: true
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          description: Which card this physical unit should be provisioned for.
+      required:
+      - id
+      - product
+      - quantity
+      - unit_price
+      - vcard
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        description:
+          type: string
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        country:
+          type: string
+          maxLength: 2
+        timezone:
+          type: string
+          maxLength: 64
+        my_role:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - my_role
+      - name
+      - slug
+      - updated_at
+    PaginatedAppointmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appointment'
+    PaginatedAppointmentServiceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppointmentService'
+    PaginatedAvailabilityRuleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityRule'
+    PaginatedCardTemplateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardTemplate'
+    PaginatedDirectoryEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+    PaginatedEnquiryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Enquiry'
+    PaginatedGalleryItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GalleryItem'
+    PaginatedNfcCardList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NfcCard'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedOrderList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+    PaginatedOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    PaginatedPaymentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+    PaginatedPhysicalCardProductList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhysicalCardProduct'
+    PaginatedPlanList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Plan'
+    PaginatedProductList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    PaginatedProfileBlockList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileBlock'
+    PaginatedProfileLinkList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileLink'
+    PaginatedServiceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+    PaginatedTestimonialList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Testimonial'
+    PaginatedVCardListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VCardList'
+    PatchedAppointmentService:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        duration_minutes:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        is_active:
+          type: boolean
+    PatchedAppointmentStatusUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status28fEnum'
+        notes:
+          type: string
+    PatchedAvailabilityRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        weekday:
+          allOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        timezone:
+          type: string
+          maxLength: 64
+    PatchedDirectoryVisibility:
+      type: object
+      properties:
+        is_directory_visible:
+          type: boolean
+        industry:
+          type: string
+          maxLength: 255
+    PatchedEnquiryStatusUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status1d0Enum'
+    PatchedGalleryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+    PatchedOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        customer:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        order_number:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusAd3Enum'
+          readOnly: true
+        payment_status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          readOnly: true
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        shipping_fee:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        shipping_address:
+          allOf:
+          - $ref: '#/components/schemas/ShippingAddress'
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          readOnly: true
+        shipping_events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShippingEvent'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedOrganization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        description:
+          type: string
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        country:
+          type: string
+          maxLength: 2
+        timezone:
+          type: string
+          maxLength: 64
+        my_role:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        image:
+          type: string
+          format: uri
+          nullable: true
+        external_url:
+          type: string
+          format: uri
+          maxLength: 200
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+    PatchedProfileBlock:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/ProfileBlockTypeEnum'
+        title:
+          type: string
+          maxLength: 255
+        content: {}
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedProfileLink:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        icon:
+          type: string
+          maxLength: 100
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+    PatchedService:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        image:
+          type: string
+          format: uri
+          nullable: true
+        booking_enabled:
+          type: boolean
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+    PatchedTestimonial:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        customer_name:
+          type: string
+          maxLength: 255
+        customer_title:
+          type: string
+          maxLength: 255
+        customer_photo:
+          type: string
+          format: uri
+          nullable: true
+        content:
+          type: string
+        rating:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          nullable: true
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 32
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        email_verified:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedVCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        owner:
+          type: string
+          format: uuid
+          readOnly: true
+        assigned_user:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          maxLength: 255
+        job_title:
+          type: string
+          maxLength: 255
+        company_name:
+          type: string
+          maxLength: 255
+        bio:
+          type: string
+        profile_photo:
+          type: string
+          format: uri
+          nullable: true
+        cover_photo:
+          type: string
+          format: uri
+          nullable: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        whatsapp:
+          type: string
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 500
+        location:
+          type: string
+          maxLength: 255
+        industry:
+          type: string
+          maxLength: 255
+        template:
+          type: string
+          format: uuid
+          nullable: true
+        theme_config: {}
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status82aEnum'
+          readOnly: true
+        is_featured:
+          type: boolean
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        is_directory_visible:
+          type: boolean
+        public_url:
+          type: string
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        provider:
+          allOf:
+          - $ref: '#/components/schemas/Provider994Enum'
+          readOnly: true
+        provider_reference:
+          type: string
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentStatusEnum'
+          readOnly: true
+        payment_method:
+          type: string
+          readOnly: true
+        paid_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - currency
+      - id
+      - paid_at
+      - payment_method
+      - provider
+      - provider_reference
+      - status
+    PaymentStatusEnum:
+      enum:
+      - pending
+      - paid
+      - failed
+      - refunded
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `paid` - Paid
+        * `failed` - Failed
+        * `refunded` - Refunded
+    PhysicalCardProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        material:
+          allOf:
+          - $ref: '#/components/schemas/MaterialEnum'
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+      required:
+      - currency
+      - description
+      - id
+      - image
+      - material
+      - name
+      - price
+    Plan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        monthly_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        annual_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          maxLength: 3
+        max_vcards:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        max_storage_mb:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        max_team_members:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        max_gallery_items:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        max_products:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        max_services:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        analytics_enabled:
+          type: boolean
+        appointments_enabled:
+          type: boolean
+        custom_domain_enabled:
+          type: boolean
+        directory_enabled:
+          type: boolean
+        remove_branding:
+          type: boolean
+        priority_support:
+          type: boolean
+      required:
+      - id
+      - name
+      - slug
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        image:
+          type: string
+          format: uri
+          nullable: true
+        external_url:
+          type: string
+          format: uri
+          maxLength: 200
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+      required:
+      - id
+      - name
+      - vcard
+    ProfileBlock:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/ProfileBlockTypeEnum'
+        title:
+          type: string
+          maxLength: 255
+        content: {}
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - type
+      - updated_at
+      - vcard
+    ProfileBlockTypeEnum:
+      enum:
+      - social
+      - link
+      - service
+      - product
+      - testimonial
+      - gallery
+      - video
+      - contact
+      - location
+      - appointment
+      - custom
+      type: string
+      description: |-
+        * `social` - Social
+        * `link` - Link
+        * `service` - Service
+        * `product` - Product
+        * `testimonial` - Testimonial
+        * `gallery` - Gallery
+        * `video` - Video
+        * `contact` - Contact
+        * `location` - Location
+        * `appointment` - Appointment
+        * `custom` - Custom
+    ProfileLink:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        icon:
+          type: string
+          maxLength: 100
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+      required:
+      - id
+      - title
+      - url
+      - vcard
+    Provider994Enum:
+      enum:
+      - stripe
+      - mpesa
+      - sasapay
+      - none
+      type: string
+      description: |-
+        * `stripe` - Stripe
+        * `mpesa` - M-Pesa
+        * `sasapay` - SasaPay
+        * `none` - None (free plan)
+    PublicBooking:
+      type: object
+      properties:
+        service_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        start_time:
+          type: string
+          format: time
+        customer_name:
+          type: string
+          maxLength: 255
+        customer_email:
+          type: string
+          format: email
+        customer_phone:
+          type: string
+          maxLength: 32
+        notes:
+          type: string
+      required:
+      - customer_email
+      - customer_name
+      - date
+      - service_id
+      - start_time
+    PublicEnquirySubmit:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        message:
+          type: string
+      required:
+      - email
+      - message
+      - name
+    PublicVCardAnalytics:
+      type: object
+      properties:
+        total_views:
+          type: integer
+      required:
+      - total_views
+    RedisEnum:
+      enum:
+      - healthy
+      - unhealthy
+      type: string
+      description: |-
+        * `healthy` - healthy
+        * `unhealthy` - unhealthy
+    Register:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - id
+      - password
+    Reorder:
+      type: object
+      description: 'Body: {"order": ["<id>", "<id>", ...]} — full ordering, front
+        to back.'
+      properties:
+        order:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - order
+    ResetPassword:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+        new_password:
+          type: string
+          writeOnly: true
+      required:
+      - new_password
+      - token
+      - uid
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        image:
+          type: string
+          format: uri
+          nullable: true
+        booking_enabled:
+          type: boolean
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+      required:
+      - id
+      - name
+      - vcard
+    ShippingAddress:
+      type: object
+      properties:
+        full_name:
+          type: string
+          maxLength: 255
+        company:
+          type: string
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 32
+        address_line_1:
+          type: string
+          maxLength: 255
+        address_line_2:
+          type: string
+          maxLength: 255
+        city:
+          type: string
+          maxLength: 100
+        state:
+          type: string
+          title: County / State
+          maxLength: 100
+        postal_code:
+          type: string
+          maxLength: 20
+        country:
+          type: string
+          maxLength: 2
+      required:
+      - address_line_1
+      - city
+      - country
+      - full_name
+      - phone
+    ShippingEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusAd3Enum'
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        tracking_number:
+          type: string
+          readOnly: true
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - description
+      - id
+      - status
+      - timestamp
+      - tracking_number
+    Status1d0Enum:
+      enum:
+      - new
+      - read
+      - replied
+      - archived
+      type: string
+      description: |-
+        * `new` - New
+        * `read` - Read
+        * `replied` - Replied
+        * `archived` - Archived
+    Status28fEnum:
+      enum:
+      - pending
+      - confirmed
+      - cancelled
+      - completed
+      - no_show
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `confirmed` - Confirmed
+        * `cancelled` - Cancelled
+        * `completed` - Completed
+        * `no_show` - No show
+    Status82aEnum:
+      enum:
+      - draft
+      - published
+      - suspended
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `published` - Published
+        * `suspended` - Suspended
+        * `archived` - Archived
+    StatusAd3Enum:
+      enum:
+      - pending_payment
+      - paid
+      - processing
+      - printing
+      - shipped
+      - delivered
+      - cancelled
+      - refunded
+      type: string
+      description: |-
+        * `pending_payment` - Pending payment
+        * `paid` - Paid
+        * `processing` - Processing
+        * `printing` - Printing
+        * `shipped` - Shipped
+        * `delivered` - Delivered
+        * `cancelled` - Cancelled
+        * `refunded` - Refunded
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        owner:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/Plan'
+          readOnly: true
+        provider:
+          allOf:
+          - $ref: '#/components/schemas/Provider994Enum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionStatusEnum'
+          readOnly: true
+        trial_start:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        trial_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        current_period_start:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        cancel_at_period_end:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - cancel_at_period_end
+      - created_at
+      - current_period_end
+      - current_period_start
+      - id
+      - organization
+      - owner
+      - plan
+      - provider
+      - status
+      - trial_end
+      - trial_start
+      - updated_at
+    SubscriptionStatusEnum:
+      enum:
+      - trialing
+      - active
+      - past_due
+      - cancelled
+      - expired
+      - paused
+      type: string
+      description: |-
+        * `trialing` - Trialing
+        * `active` - Active
+        * `past_due` - Past due
+        * `cancelled` - Cancelled
+        * `expired` - Expired
+        * `paused` - Paused
+    Testimonial:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vcard:
+          type: string
+          format: uuid
+          readOnly: true
+        customer_name:
+          type: string
+          maxLength: 255
+        customer_title:
+          type: string
+          maxLength: 255
+        customer_photo:
+          type: string
+          format: uri
+          nullable: true
+        content:
+          type: string
+        rating:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          nullable: true
+        position:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        is_visible:
+          type: boolean
+      required:
+      - content
+      - customer_name
+      - id
+      - vcard
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 32
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        email_verified:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_joined
+      - email
+      - email_verified
+      - full_name
+      - id
+      - is_active
+    VCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        owner:
+          type: string
+          format: uuid
+          readOnly: true
+        assigned_user:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          maxLength: 255
+        job_title:
+          type: string
+          maxLength: 255
+        company_name:
+          type: string
+          maxLength: 255
+        bio:
+          type: string
+        profile_photo:
+          type: string
+          format: uri
+          nullable: true
+        cover_photo:
+          type: string
+          format: uri
+          nullable: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        whatsapp:
+          type: string
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 500
+        location:
+          type: string
+          maxLength: 255
+        industry:
+          type: string
+          maxLength: 255
+        template:
+          type: string
+          format: uuid
+          nullable: true
+        theme_config: {}
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status82aEnum'
+          readOnly: true
+        is_featured:
+          type: boolean
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        is_directory_visible:
+          type: boolean
+        public_url:
+          type: string
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assigned_user
+      - created_at
+      - display_name
+      - id
+      - is_featured
+      - is_verified
+      - organization
+      - owner
+      - public_url
+      - published_at
+      - slug
+      - status
+      - updated_at
+    VCardCreate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          nullable: true
+        display_name:
+          type: string
+          maxLength: 255
+        job_title:
+          type: string
+          maxLength: 255
+        company_name:
+          type: string
+          maxLength: 255
+        bio:
+          type: string
+        profile_photo:
+          type: string
+          format: uri
+          nullable: true
+        cover_photo:
+          type: string
+          format: uri
+          nullable: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        whatsapp:
+          type: string
+          maxLength: 32
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 500
+        location:
+          type: string
+          maxLength: 255
+        industry:
+          type: string
+          maxLength: 255
+        template:
+          type: string
+          format: uuid
+          nullable: true
+        theme_config: {}
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+      required:
+      - display_name
+      - id
+    VCardList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          readOnly: true
+        job_title:
+          type: string
+          readOnly: true
+        company_name:
+          type: string
+          readOnly: true
+        profile_photo:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status82aEnum'
+          readOnly: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          readOnly: true
+        is_featured:
+          type: boolean
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - company_name
+      - created_at
+      - display_name
+      - id
+      - is_featured
+      - is_verified
+      - job_title
+      - organization
+      - profile_photo
+      - slug
+      - status
+      - updated_at
+      - visibility
+    VCardPublic:
+      type: object
+      description: |-
+        Only fields that are safe to expose with no authentication (§35, §36:
+        never private analytics/billing/internal org info).
+      properties:
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          readOnly: true
+        job_title:
+          type: string
+          readOnly: true
+        company_name:
+          type: string
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+        profile_photo:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        cover_photo:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        whatsapp:
+          type: string
+          readOnly: true
+        website:
+          type: string
+          format: uri
+          readOnly: true
+        address:
+          type: string
+          readOnly: true
+        location:
+          type: string
+          readOnly: true
+        template:
+          allOf:
+          - $ref: '#/components/schemas/CardTemplate'
+          readOnly: true
+        theme_config:
+          readOnly: true
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileLink'
+          readOnly: true
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+          readOnly: true
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          readOnly: true
+        testimonials:
+          type: array
+          items:
+            $ref: '#/components/schemas/Testimonial'
+          readOnly: true
+        gallery_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GalleryItem'
+          readOnly: true
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileBlock'
+          readOnly: true
+      required:
+      - address
+      - bio
+      - blocks
+      - company_name
+      - cover_photo
+      - display_name
+      - email
+      - gallery_items
+      - job_title
+      - links
+      - location
+      - phone
+      - products
+      - profile_photo
+      - services
+      - slug
+      - template
+      - testimonials
+      - theme_config
+      - website
+      - whatsapp
+    VisibilityEnum:
+      enum:
+      - public
+      - unlisted
+      - private
+      type: string
+      description: |-
+        * `public` - Public
+        * `unlisted` - Unlisted
+        * `private` - Private
+    WeekdayEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      type: integer
+      description: |-
+        * `0` - Monday
+        * `1` - Tuesday
+        * `2` - Wednesday
+        * `3` - Thursday
+        * `4` - Friday
+        * `5` - Saturday
+        * `6` - Sunday
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

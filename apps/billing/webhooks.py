@@ -1,6 +1,8 @@
 import json
 import logging
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +19,7 @@ class StripeWebhookView(APIView):
     authentication_classes = []
     throttle_scope = "webhook"
 
+    @extend_schema(request=OpenApiTypes.OBJECT, responses={200: OpenApiTypes.OBJECT}, description="Provider-signed webhook — payload shape is defined by the provider, not this API. Not meant to be called by hand.")
     def post(self, request):
         import stripe
 
@@ -41,6 +44,7 @@ class MpesaWebhookView(APIView):
     authentication_classes = []
     throttle_scope = "webhook"
 
+    @extend_schema(request=OpenApiTypes.OBJECT, responses={200: OpenApiTypes.OBJECT}, description="Provider-signed webhook — payload shape is defined by the provider, not this API. Not meant to be called by hand.")
     def post(self, request):
         try:
             payload = json.loads(request.body)
@@ -56,6 +60,7 @@ class SasaPayWebhookView(APIView):
     authentication_classes = []
     throttle_scope = "webhook"
 
+    @extend_schema(request=OpenApiTypes.OBJECT, responses={200: OpenApiTypes.OBJECT}, description="Provider-signed webhook — payload shape is defined by the provider, not this API. Not meant to be called by hand.")
     def post(self, request):
         try:
             payload = json.loads(request.body)

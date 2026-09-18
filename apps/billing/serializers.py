@@ -33,6 +33,11 @@ class CheckoutSerializer(serializers.Serializer):
     organization_id = serializers.UUIDField(required=False, allow_null=True)
 
 
+class CheckoutResultSerializer(serializers.Serializer):
+    redirect_url = serializers.CharField(allow_null=True)
+    provider_reference = serializers.CharField()
+
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment

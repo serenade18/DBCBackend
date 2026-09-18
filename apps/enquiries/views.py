@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -45,6 +46,7 @@ class PublicEnquirySubmitView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "enquiry-submit"
 
+    @extend_schema(request=PublicEnquirySubmitSerializer, responses={201: EnquirySerializer})
     def post(self, request, vcard_slug):
         vcard = get_object_or_404(VCard, slug=vcard_slug)
         if not vcard.is_publicly_viewable:

@@ -1,7 +1,14 @@
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from functools import reduce
+from operator import or_
+
+from django.db.models import Q
 
 from apps.cards.models import VCard, VCardStatus, VCardVisibility
 
+# §37: portable across DB engines via icontains — swap for MySQL FULLTEXT
+# (a migration-added FULLTEXT index + a raw MATCH ... AGAINST annotation) or
+# Elasticsearch/OpenSearch once relevance ranking or raw-event volume
+# actually requires it; the public search API here wouldn't need to change.
 SEARCH_FIELDS = ["display_name", "company_name", "job_title", "bio", "location", "industry"]
 
 
@@ -28,10 +35,7 @@ def search_directory(*, q="", category="", location="", industry="", company="",
         queryset = queryset.filter(company_name__icontains=company)
 
     if q:
-        vector = SearchVector(*SEARCH_FIELDS)
-        query = SearchQuery(q)
-        queryset = queryset.annotate(rank=SearchRank(vector, query)).filter(rank__gt=0).order_by("-rank")
-    else:
-        queryset = queryset.order_by("-is_featured", "-created_at")
+        condition = reduce(or_, (Q(**{f"{field}__icontains": q}) for field in SEARCH_FIELDS))
+        queryset = queryset.filter(condition)
 
-    return queryset
+    return queryset.order_by("-is_featured", "-created_at")

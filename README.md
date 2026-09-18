@@ -4,7 +4,7 @@ Django REST Framework backend for the Digital Business Card SaaS platform. Full 
 
 ## Stack
 
-Python 3.12, Django, DRF, PostgreSQL, Redis, Celery, JWT auth (SimpleJWT), S3-compatible storage, Stripe / M-Pesa / SasaPay.
+Python 3.12, Django, DRF, MySQL, Redis, Celery, JWT auth (SimpleJWT), S3-compatible storage, Stripe / M-Pesa / SasaPay.
 
 ## Local setup
 
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 cp .env.example .env   # then fill in DATABASE_URL etc.
 
-createdb dbc_backend    # or: docker compose up -d db redis
+mysql -u root -e "CREATE DATABASE dbc_backend CHARACTER SET utf8mb4;"   # or: docker compose up -d db redis
 
 python manage.py migrate
 python manage.py seed_initial_data   # plans + card templates
@@ -24,6 +24,8 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+`mysqlclient` (the Python driver) needs MySQL's client dev headers to build — on macOS: `brew install mysql-client && export PKG_CONFIG_PATH="$(brew --prefix mysql-client)/lib/pkgconfig"` before `pip install`.
+
 In separate terminals for background jobs:
 
 ```bash
@@ -31,7 +33,7 @@ celery -A config worker -l info
 celery -A config beat -l info
 ```
 
-Or run everything (Postgres, Redis, web, worker, beat) via:
+Or run everything (MySQL, Redis, web, worker, beat) via:
 
 ```bash
 docker compose up --build

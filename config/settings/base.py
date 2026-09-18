@@ -26,7 +26,6 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.postgres",
 ]
 
 THIRD_PARTY_APPS = [
@@ -97,11 +96,14 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default="postgres://postgres:postgres@localhost:5432/dbc_backend",
+        default="mysql://root:root@localhost:3306/dbc_backend",
     )
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DATABASE_CONN_MAX_AGE", default=60)
+# utf8mb4 for full Unicode (emoji, etc.) support; Django's MySQL backend
+# already enforces STRICT_TRANS_TABLES sql_mode by default.
+DATABASES["default"].setdefault("OPTIONS", {})["charset"] = "utf8mb4"
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -169,7 +171,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------------------------------------------------------------------
 # Redis / Celery
 # ---------------------------------------------------------------------------
-REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
+REDIS_URL = env("REDIS_URL", default="redis://127.0.0.1:6379/0")
 
 CACHES = {
     "default": {

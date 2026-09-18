@@ -1,7 +1,14 @@
 from celery import shared_task
 from django.conf import settings
 
-from apps.notifications.email import password_reset_url, send_email, verification_email_url
+from apps.notifications.email import (
+    email_button,
+    email_table,
+    password_reset_url,
+    send_email,
+    verification_email_url,
+    wrap_email,
+)
 from apps.notifications.sms import send_sms
 
 
@@ -39,11 +46,16 @@ def send_verification_email(user_id, uid, token):
     if not user:
         return
     url = verification_email_url(uid, token)
-    send_email(
-        to=user.email,
-        subject="Verify your email",
-        body=f"Hi {user.first_name or ''},\n\nPlease verify your email: {url}\n\nIf you didn't sign up, ignore this email.",
+    name = user.first_name or "there"
+    text = (
+        f"Hi {name},\n\nPlease verify your email: {url}\n\nIf you didn't sign up, ignore this email."
     )
+    html = wrap_email(
+        title="Verify your email",
+        body_html=f"<p>Hi {name},</p><p>Confirm your email address to activate your DBC account.</p>",
+        cta_html=email_button("Verify email", url),
+    )
+    send_email(to=user.email, subject="Verify your email", body=text, html_body=html)
 
 
 @shared_task
@@ -54,11 +66,20 @@ def send_password_reset_email(user_id, uid, token):
     if not user:
         return
     url = password_reset_url(uid, token)
-    send_email(
-        to=user.email,
-        subject="Reset your password",
-        body=f"Hi {user.first_name or ''},\n\nReset your password: {url}\n\nIf you didn't request this, ignore this email.",
+    name = user.first_name or "there"
+    text = (
+        f"Hi {name},\n\nReset your password: {url}\n\nIf you didn't request this, ignore this email."
     )
+    html = wrap_email(
+        title="Reset your password",
+        body_html=(
+            f"<p>Hi {name},</p>"
+            "<p>We received a request to reset your DBC password. Click below to choose a new one.</p>"
+            "<p>If you didn't request this, you can safely ignore this email — your password won't change.</p>"
+        ),
+        cta_html=email_button("Reset password", url),
+    )
+    send_email(to=user.email, subject="Reset your password", body=text, html_body=html)
 
 
 @shared_task
@@ -68,7 +89,15 @@ def send_welcome_email(user_id):
     user = get_user_model().objects.filter(id=user_id).first()
     if not user:
         return
-    send_email(to=user.email, subject="Welcome!", body=f"Hi {user.first_name or ''}, welcome aboard.")
+    name = user.first_name or "there"
+    dashboard_url = f"{settings.FRONTEND_URL}/app"
+    text = f"Hi {name}, welcome aboard.\n\nGet started: {dashboard_url}"
+    html = wrap_email(
+        title=f"Welcome, {name}",
+        body_html="<p>Thanks for joining DBC. Create your first card and share it in minutes.</p>",
+        cta_html=email_button("Go to dashboard", dashboard_url),
+    )
+    send_email(to=user.email, subject="Welcome to DBC", body=text, html_body=html)
     notify_in_app(user_id=user_id, type="welcome", title="Welcome to the platform!")
 
 
@@ -80,15 +109,21 @@ def send_team_invitation_email(member_id):
     if not member:
         return
     url = f"{settings.FRONTEND_URL}/invitations/{member.id}"
-    send_email(
-        to=member.user.email,
-        subject=f"You've been invited to join {member.organization.name}",
-        body=f"You've been invited to join {member.organization.name} as {member.role}. Accept here: {url}",
+    org_name = member.organization.name
+    text = f"You've been invited to join {org_name} as {member.role}. Accept here: {url}"
+    html = wrap_email(
+        title="You've been invited",
+        body_html=(
+            f"<p>You've been invited to join <strong>{org_name}</strong> on DBC as "
+            f"<strong>{member.role}</strong>.</p>"
+        ),
+        cta_html=email_button("Accept invitation", url),
     )
+    send_email(to=member.user.email, subject=f"You've been invited to join {org_name}", body=text, html_body=html)
     notify_in_app(
         user_id=member.user_id,
         type="team_invitation",
-        title=f"Invitation to join {member.organization.name}",
+        title=f"Invitation to join {org_name}",
         link_url=url,
     )
 
@@ -101,17 +136,28 @@ def notify_new_enquiry(enquiry_id):
     if not enquiry:
         return
     recipient = enquiry.vcard.assigned_user or enquiry.vcard.owner
+    url = f"{settings.FRONTEND_URL}/app/enquiries?vcard={enquiry.vcard_id}"
+    text = f"{enquiry.name} ({enquiry.email}) sent:\n\n{enquiry.message}\n\nView it: {url}"
+    html = wrap_email(
+        title=f"New enquiry on {enquiry.vcard.display_name}",
+        body_html=(
+            email_table([("From", enquiry.name), ("Email", enquiry.email)])
+            + f"<p>{enquiry.message}</p>"
+        ),
+        cta_html=email_button("View enquiry", url),
+    )
     send_email(
         to=recipient.email,
         subject=f"New enquiry on {enquiry.vcard.display_name}",
-        body=f"{enquiry.name} ({enquiry.email}) sent:\n\n{enquiry.message}",
+        body=text,
+        html_body=html,
     )
     notify_in_app(
         user_id=recipient.id,
         type="new_enquiry",
         title=f"New enquiry from {enquiry.name}",
         body=enquiry.message[:200],
-        link_url=f"{settings.FRONTEND_URL}/enquiries/{enquiry.id}",
+        link_url=url,
     )
 
 
@@ -123,13 +169,30 @@ def notify_new_appointment(appointment_id):
     if not appointment:
         return
     recipient = appointment.vcard.assigned_user or appointment.vcard.owner
+    url = f"{settings.FRONTEND_URL}/app/appointments?vcard={appointment.vcard_id}"
+    text = (
+        f"{appointment.customer_name} booked {appointment.service.name} on "
+        f"{appointment.date} at {appointment.start_time}.\n\nView it: {url}"
+    )
+    html = wrap_email(
+        title="New appointment booked",
+        body_html=email_table([
+            ("Customer", appointment.customer_name),
+            ("Service", appointment.service.name),
+            ("Date", str(appointment.date)),
+            ("Time", str(appointment.start_time)),
+        ]),
+        cta_html=email_button("View appointment", url),
+    )
     send_email(
         to=recipient.email,
         subject=f"New appointment booked: {appointment.customer_name}",
-        body=f"{appointment.customer_name} booked {appointment.service.name} on {appointment.date} at {appointment.start_time}.",
+        body=text,
+        html_body=html,
     )
     notify_in_app(
         user_id=recipient.id,
         type="new_appointment",
         title=f"New appointment with {appointment.customer_name}",
+        link_url=url,
     )

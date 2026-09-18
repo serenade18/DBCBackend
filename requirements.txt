@@ -16,6 +16,7 @@ vobject>=0.9,<0.10
 drf-spectacular>=0.27,<0.28
 user-agents>=2.2,<2.3
 requests>=2.32,<2.33
+resend>=2.0,<3.0
 stripe>=10.0,<11.0
 gunicorn>=22.0,<23.0
 whitenoise>=6.7,<6.8

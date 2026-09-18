@@ -96,7 +96,9 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
         from apps.notifications.tasks import send_team_invitation_email
 
-        send_team_invitation_email.delay(str(membership.id))
+        # Direct call, not .delay() — no Celery worker required; see
+        # apps.accounts.views._send_verification_email.
+        send_team_invitation_email(str(membership.id))
         log_audit_event(
             actor=request.user, organization=organization, action="organization.member_invited",
             resource_type="organization_member", resource_id=membership.id, request=request,

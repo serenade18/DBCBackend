@@ -113,7 +113,8 @@ class ForgotPasswordView(APIView):
             token = default_token_generator.make_token(user)
             from apps.notifications.tasks import send_password_reset_email
 
-            send_password_reset_email.delay(str(user.id), uid, token)
+            # Direct call, not .delay() — see _send_verification_email above.
+            send_password_reset_email(str(user.id), uid, token)
 
         # Always 200 — never reveal whether an email is registered.
         return Response({"detail": "If that account exists, a reset link has been sent."})
@@ -184,4 +185,7 @@ def _send_verification_email(user):
     token = email_verification_token.make_token(user)
     from apps.notifications.tasks import send_verification_email
 
-    send_verification_email.delay(str(user.id), uid, token)
+    # Called directly (not .delay()) so this sends synchronously within the
+    # request — no Celery worker required. Fine for a single transactional
+    # email; switch back to .delay() if this ever needs to be queued.
+    send_verification_email(str(user.id), uid, token)

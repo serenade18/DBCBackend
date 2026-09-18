@@ -270,6 +270,11 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@example.com")
 
+# When set, apps.notifications.email.send_email() sends via the Resend API
+# directly (synchronous HTTP call, no SMTP/Celery involved) instead of
+# Django's EMAIL_BACKEND. Leave blank to keep using EMAIL_BACKEND as before.
+RESEND_API_KEY = env("RESEND_API_KEY", default="")
+
 SMS_API_KEY = env("SMS_API_KEY", default="")
 SMS_SENDER_ID = env("SMS_SENDER_ID", default="")
 

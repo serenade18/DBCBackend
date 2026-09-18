@@ -58,7 +58,9 @@ class PublicEnquirySubmitView(APIView):
 
         from apps.notifications.tasks import notify_new_enquiry
 
-        notify_new_enquiry.delay(str(enquiry.id))
+        # Direct call, not .delay() — no Celery worker required; see
+        # apps.accounts.views._send_verification_email.
+        notify_new_enquiry(str(enquiry.id))
 
         if request.content_type == "application/json":
             return Response(EnquirySerializer(enquiry).data, status=status.HTTP_201_CREATED)

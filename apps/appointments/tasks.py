@@ -23,7 +23,7 @@ def send_appointment_reminders():
         status=AppointmentStatus.CONFIRMED, reminder_sent_at__isnull=True,
     ).select_related("vcard", "service")
 
-    from apps.notifications.email import send_email
+    from apps.notifications.email import email_table, send_email, wrap_email
 
     for appointment in upcoming:
         naive_start = timezone.datetime.combine(appointment.date, appointment.start_time)
@@ -32,10 +32,26 @@ def send_appointment_reminders():
         if not (window_start <= starts_at <= window_end):
             continue
 
+        text = (
+            f"This is a reminder for your {appointment.service.name} appointment on "
+            f"{appointment.date} at {appointment.start_time}."
+        )
+        html = wrap_email(
+            title="Appointment reminder",
+            body_html=(
+                "<p>This is a reminder for your upcoming appointment.</p>"
+                + email_table([
+                    ("Service", appointment.service.name),
+                    ("Date", str(appointment.date)),
+                    ("Time", str(appointment.start_time)),
+                ])
+            ),
+        )
         send_email(
             to=appointment.customer_email,
             subject=f"Reminder: {appointment.service.name} tomorrow",
-            body=f"This is a reminder for your {appointment.service.name} appointment on {appointment.date} at {appointment.start_time}.",
+            body=text,
+            html_body=html,
         )
         appointment.reminder_sent_at = now
         appointment.save(update_fields=["reminder_sent_at"])

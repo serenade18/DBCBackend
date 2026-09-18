@@ -49,5 +49,7 @@ def book_appointment(*, vcard, service, customer_name, customer_email, customer_
 
     from apps.notifications.tasks import notify_new_appointment
 
-    notify_new_appointment.delay(str(appointment.id))
+    # Direct call, not .delay() — no Celery worker required; see
+    # apps.accounts.views._send_verification_email.
+    notify_new_appointment(str(appointment.id))
     return appointment

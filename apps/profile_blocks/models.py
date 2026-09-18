@@ -1,6 +1,7 @@
 from django.db import models
 
 from apps.core.models import BaseModel, OrderedVisibleModel
+from apps.core.validators import validate_image_file
 
 
 class ProfileBlockType(models.TextChoices):
@@ -57,7 +58,7 @@ class Service(BaseModel, OrderedVisibleModel):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, default="USD")
-    image = models.ImageField(upload_to="vcards/services/", blank=True, null=True)
+    image = models.ImageField(upload_to="vcards/services/", blank=True, null=True, validators=[validate_image_file])
     booking_enabled = models.BooleanField(default=False)
 
     class Meta(OrderedVisibleModel.Meta):
@@ -73,7 +74,7 @@ class Product(BaseModel, OrderedVisibleModel):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, default="USD")
-    image = models.ImageField(upload_to="vcards/products/", blank=True, null=True)
+    image = models.ImageField(upload_to="vcards/products/", blank=True, null=True, validators=[validate_image_file])
     external_url = models.URLField(blank=True)
 
     class Meta(OrderedVisibleModel.Meta):
@@ -87,7 +88,7 @@ class Testimonial(BaseModel, OrderedVisibleModel):
     vcard = models.ForeignKey("cards.VCard", on_delete=models.CASCADE, related_name="testimonials")
     customer_name = models.CharField(max_length=255)
     customer_title = models.CharField(max_length=255, blank=True)
-    customer_photo = models.ImageField(upload_to="vcards/testimonials/", blank=True, null=True)
+    customer_photo = models.ImageField(upload_to="vcards/testimonials/", blank=True, null=True, validators=[validate_image_file])
     content = models.TextField()
     rating = models.PositiveSmallIntegerField(null=True, blank=True)
 
@@ -100,7 +101,7 @@ class Testimonial(BaseModel, OrderedVisibleModel):
 
 class GalleryItem(BaseModel, OrderedVisibleModel):
     vcard = models.ForeignKey("cards.VCard", on_delete=models.CASCADE, related_name="gallery_items")
-    image = models.ImageField(upload_to="vcards/gallery/")
+    image = models.ImageField(upload_to="vcards/gallery/", validators=[validate_image_file])
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
 

@@ -1,12 +1,13 @@
 from django.db import models
 
 from apps.core.models import BaseModel
+from apps.core.validators import validate_image_file
 
 
 class Organization(BaseModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
-    logo = models.ImageField(upload_to="organizations/logos/", blank=True, null=True)
+    logo = models.ImageField(upload_to="organizations/logos/", blank=True, null=True, validators=[validate_image_file])
     description = models.TextField(blank=True)
     website = models.URLField(blank=True)
     email = models.EmailField(blank=True)

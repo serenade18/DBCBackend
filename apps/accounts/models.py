@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
 from apps.accounts.managers import UserManager
+from apps.core.validators import validate_image_file
 
 
 class PlatformRole(models.TextChoices):
@@ -19,7 +20,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=32, blank=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True, validators=[validate_image_file])
 
     # Platform-level staff role (§5). Regular end users leave this blank —
     # org-level permissions (owner/admin/member) live on OrganizationMember.

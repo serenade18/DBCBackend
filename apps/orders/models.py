@@ -4,6 +4,7 @@ import string
 from django.db import models
 
 from apps.core.models import BaseModel
+from apps.core.validators import validate_image_file
 
 
 class PhysicalCardProduct(BaseModel):
@@ -17,7 +18,7 @@ class PhysicalCardProduct(BaseModel):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="USD")
-    image = models.ImageField(upload_to="products/nfc-cards/", blank=True, null=True)
+    image = models.ImageField(upload_to="products/nfc-cards/", blank=True, null=True, validators=[validate_image_file])
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -91,12 +92,6 @@ class Order(BaseModel):
 
     def __str__(self):
         return self.order_number
-
-    def recalculate_totals(self, save=True):
-        self.subtotal = sum((item.unit_price * item.quantity for item in self.items.all()), start=0)
-        self.total = self.subtotal + self.shipping_fee + self.tax
-        if save:
-            self.save(update_fields=["subtotal", "total"])
 
 
 class OrderItem(BaseModel):

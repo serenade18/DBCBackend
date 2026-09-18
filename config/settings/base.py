@@ -36,7 +36,6 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "drf_spectacular",
-    "django_celery_beat",
     "storages",
 ]
 
@@ -138,7 +137,6 @@ SUPPORTED_CURRENCIES = ["KES", "USD", "EUR", "GBP"]
 # ---------------------------------------------------------------------------
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "mediafiles"

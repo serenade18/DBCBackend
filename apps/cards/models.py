@@ -1,6 +1,7 @@
 from django.db import models
 
 from apps.core.models import BaseModel
+from apps.core.validators import validate_image_file
 
 DEFAULT_THEME_CONFIG = {
     "primaryColor": "#111827",
@@ -42,8 +43,8 @@ class VCard(BaseModel):
     company_name = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
 
-    profile_photo = models.ImageField(upload_to="vcards/profile/", blank=True, null=True)
-    cover_photo = models.ImageField(upload_to="vcards/cover/", blank=True, null=True)
+    profile_photo = models.ImageField(upload_to="vcards/profile/", blank=True, null=True, validators=[validate_image_file])
+    cover_photo = models.ImageField(upload_to="vcards/cover/", blank=True, null=True, validators=[validate_image_file])
 
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=32, blank=True)

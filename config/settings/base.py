@@ -96,10 +96,14 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database
 # ---------------------------------------------------------------------------
 DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default="mysql://root:root@localhost:3306/dbc_backend",
-    )
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": env("DB_NAME", default="dbc_backend"),
+        "USER": env("DB_USER", default="root"),
+        "PASSWORD": env("DB_PASSWORD", default="root"),
+        "HOST": env("DB_HOST", default="localhost"),
+        "PORT": env("DB_PORT", default="3306"),
+    }
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DATABASE_CONN_MAX_AGE", default=60)

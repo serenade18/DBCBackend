@@ -22,7 +22,11 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.development
-      DATABASE_URL: mysql://root:root@db:3306/dbc_backend
+      DB_NAME: dbc_backend
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: db
+      DB_PORT: 3306
       REDIS_URL: redis://redis:6379/0
     volumes:
       - .:/app
@@ -37,7 +41,11 @@ services:
     command: celery -A config worker -l info
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.development
-      DATABASE_URL: mysql://root:root@db:3306/dbc_backend
+      DB_NAME: dbc_backend
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: db
+      DB_PORT: 3306
       REDIS_URL: redis://redis:6379/0
     volumes:
       - .:/app
@@ -50,7 +58,11 @@ services:
     command: celery -A config beat -l info
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.development
-      DATABASE_URL: mysql://root:root@db:3306/dbc_backend
+      DB_NAME: dbc_backend
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: db
+      DB_PORT: 3306
       REDIS_URL: redis://redis:6379/0
     volumes:
       - .:/app
